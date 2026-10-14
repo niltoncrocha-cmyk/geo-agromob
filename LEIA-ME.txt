@@ -1,0 +1,25 @@
+GEO AGROMOB — VERSÃO 2 (USO EM APARELHO ÚNICO)
+
+Recursos:
+- Cadastro manual de filial, tipo, modelo, número de série/chassi e observações.
+- Duas fotos por equipamento: plaqueta e equipamento completo.
+- Captura de GPS com precisão informada e link para abrir no Google Maps no relatório.
+- Data e hora do registro.
+- Lista de equipamentos com pesquisa, edição e exclusão individual.
+- Relatório completo em formato para impressão / salvar como PDF, com uma página por equipamento.
+- Exportação de cópia de segurança em JSON e restauração dessa cópia.
+- Armazenamento local no próprio aparelho/navegador; não precisa de conta nem servidor.
+
+COMO USAR:
+1. Extraia o ZIP.
+2. Para teste inicial, abra index.html em um navegador moderno.
+3. Para GPS, instalação e acesso confiável à câmera, publique os arquivos em HTTPS (GitHub Pages oferece hospedagem estática gratuita) e abra pelo celular.
+4. No celular, escolha “Adicionar à tela inicial” / “Instalar aplicativo”.
+5. Cadastre os equipamentos. Ao terminar, toque em “Gerar relatório” e escolha “Salvar como PDF” na janela de impressão.
+6. Exporte cópias de segurança regularmente e guarde-as fora do aparelho.
+
+ATENÇÃO:
+- Dados são locais e não sincronizam com outros aparelhos.
+- Limpar os dados do navegador, desinstalar ou perder o aparelho pode apagar os registros locais.
+- A localização exige permissão do usuário e normalmente HTTPS; sem GPS, o equipamento ainda pode ser registrado.
+- O recurso de restauração adiciona os registros da cópia aos registros existentes; evite importar a mesma cópia várias vezes para não duplicar itens.
