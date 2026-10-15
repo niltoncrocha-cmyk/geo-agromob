@@ -1,4 +1,3 @@
-
 <!doctype html>
 <html lang="pt-BR">
 <head>
@@ -43,58 +42,31 @@ footer{text-align:center;color:#777;font-size:12px;padding:15px}
 </style>
 </head>
 <body>
-<header>
-<h1>GEO AGROMOB</h1>
-<p>Registro fotográfico e geolocalização de equipamentos</p>
-</header>
-
+<header><h1>GEO AGROMOB</h1><p>Registro fotográfico e geolocalização de equipamentos</p></header>
 <main>
 <div id="gpsStatus" class="status">Localização ainda não capturada. Autorize o GPS para registrar as coordenadas.</div>
-
 <section class="card">
 <h2>1. Identificação do equipamento</h2>
-<label for="branch">Filial / unidade *</label>
-<input id="branch" value="Primavera do Leste - MT">
-<label for="type">Tipo de equipamento *</label>
-<input id="type" placeholder="Ex.: Trator">
-<label for="model">Modelo *</label>
-<input id="model" placeholder="Ex.: Valtra A134H">
-<label for="serial">Número de série / chassi *</label>
-<input id="serial" placeholder="Digite ou cole o número">
-<label for="notes">Observações</label>
-<textarea id="notes" placeholder="Condição, local no pátio ou outras observações"></textarea>
+<label for="branch">Filial / unidade *</label><input id="branch" value="Primavera do Leste - MT">
+<label for="type">Tipo de equipamento *</label><input id="type" placeholder="Ex.: Trator">
+<label for="model">Modelo *</label><input id="model" placeholder="Ex.: Valtra A134H">
+<label for="serial">Número de série / chassi *</label><input id="serial" placeholder="Digite ou cole o número">
+<label for="notes">Observações</label><textarea id="notes" placeholder="Condição, local no pátio ou outras observações"></textarea>
 </section>
-
 <section class="card">
 <h2>2. Fotografias georreferenciadas</h2>
-<p class="hint">As fotos serão capturadas dentro do Geo AGROMOB. A data, a hora e as coordenadas serão aplicadas à imagem. O mapa será incluído se o serviço cartográfico estiver disponível.</p>
-
+<p class="hint">As fotos recebem data, hora, endereço e um mapa com marcador GPS quando houver conexão com a internet. As coordenadas e a precisão são mantidas no registro.</p>
 <div class="photos">
-<div class="photo">
-<strong>Foto 1 — Plaqueta *</strong>
-<img id="preview1" alt="Prévia da plaqueta">
-<button class="yellow" onclick="abrirCamera(1)">📷 FOTOGRAFAR PLAQUETA</button>
-<p class="hint">Enquadre a identificação e o número de série.</p>
+<div class="photo"><strong>Foto 1 — Plaqueta *</strong><img id="preview1" alt="Prévia da plaqueta"><button class="yellow" onclick="abrirCamera(1)">📷 FOTOGRAFAR PLAQUETA</button><p class="hint">Enquadre a identificação e o número de série.</p></div>
+<div class="photo"><strong>Foto 2 — Equipamento *</strong><img id="preview2" alt="Prévia do equipamento"><button class="yellow" onclick="abrirCamera(2)">📷 FOTOGRAFAR MÁQUINA</button><p class="hint">Mostre o equipamento completo.</p></div>
 </div>
-<div class="photo">
-<strong>Foto 2 — Equipamento *</strong>
-<img id="preview2" alt="Prévia do equipamento">
-<button class="yellow" onclick="abrirCamera(2)">📷 FOTOGRAFAR MÁQUINA</button>
-<p class="hint">Mostre o equipamento completo.</p>
-</div>
-</div>
-
 <button class="btn gray" onclick="capturarGPS()">📍 ATUALIZAR LOCALIZAÇÃO GPS</button>
 <div id="photoStatus" class="status">Capture as duas fotos antes de salvar.</div>
 </section>
-
 <button id="saveBtn" class="btn yellow" onclick="salvar()">SALVAR EQUIPAMENTO</button>
-
 <section class="card">
-<h2>3. Registros e relatórios</h2>
-<div id="count" class="status">Carregando registros...</div>
-<label for="search">Pesquisar equipamento</label>
-<input id="search" placeholder="Modelo, tipo ou número de série" oninput="listar()">
+<h2>3. Registros e relatórios</h2><div id="count" class="status">Carregando registros...</div>
+<label for="search">Pesquisar equipamento</label><input id="search" placeholder="Modelo, tipo ou número de série" oninput="listar()">
 <div id="records"></div>
 <button class="btn dark" onclick="gerarPDF()">GERAR RELATÓRIO / SALVAR PDF</button>
 <button class="btn gray" onclick="exportarBackup()">EXPORTAR BACKUP JSON</button>
@@ -105,420 +77,120 @@ footer{text-align:center;color:#777;font-size:12px;padding:15px}
 </section>
 <footer>Geo AGROMOB • AGROMOB Fendt / Valtra</footer>
 </main>
-
 <div id="cameraBox">
-<h2 id="cameraTitle">Capturar fotografia</h2>
-<p id="cameraHint" class="hint" style="color:white">Autorize o uso da câmera e da localização.</p>
-<video id="video" autoplay playsinline muted></video>
-<canvas id="canvas" hidden></canvas>
-<div class="cameraActions">
-<button class="yellow" onclick="tirarFoto()">CAPTURAR FOTO</button>
-<button class="gray" onclick="fecharCamera()">CANCELAR</button>
+<h2 id="cameraTitle">Capturar fotografia</h2><p id="cameraHint" class="hint" style="color:white">Autorize o uso da câmera e da localização.</p>
+<video id="video" autoplay playsinline muted></video><canvas id="canvas" hidden></canvas>
+<div class="cameraActions"><button class="yellow" onclick="tirarFoto()">CAPTURAR FOTO</button><button class="gray" onclick="fecharCamera()">CANCELAR</button></div>
+<p class="hint" style="color:white">A imagem final incluirá data, hora, endereço, coordenadas e mapa quando disponíveis.</p>
 </div>
-<p class="hint" style="color:white">A imagem final terá data, hora, coordenadas e, quando disponível, um mapa de localização.</p>
-</div>
-
 <script>
-const DB='geoAgromobDB';
-const STORE='equipamentos';
-let gps=null;
-let fotos={1:'',2:''};
-let stream=null;
-let fotoAtual=1;
-let busy=false;
-
-function abrirDB(){
- return new Promise((resolve,reject)=>{
-  const req=indexedDB.open(DB,1);
-  req.onupgradeneeded=()=>{
-   if(!req.result.objectStoreNames.contains(STORE)){
-    req.result.createObjectStore(STORE,{keyPath:'id',autoIncrement:true});
-   }
-  };
-  req.onsuccess=()=>resolve(req.result);
-  req.onerror=()=>reject(req.error);
- });
-}
-
-async function todos(){
- const db=await abrirDB();
- return new Promise((resolve,reject)=>{
-  const req=db.transaction(STORE).objectStore(STORE).getAll();
-  req.onsuccess=()=>resolve(req.result);
-  req.onerror=()=>reject(req.error);
- });
-}
-
-async function inserir(item){
- const db=await abrirDB();
- return new Promise((resolve,reject)=>{
-  const req=db.transaction(STORE,'readwrite').objectStore(STORE).add(item);
-  req.onsuccess=()=>resolve(req.result);
-  req.onerror=()=>reject(req.error);
- });
-}
-
-async function atualizar(item){
- const db=await abrirDB();
- return new Promise((resolve,reject)=>{
-  const req=db.transaction(STORE,'readwrite').objectStore(STORE).put(item);
-  req.onsuccess=resolve;
-  req.onerror=()=>reject(req.error);
- });
-}
-
-async function excluir(id){
- const db=await abrirDB();
- return new Promise((resolve,reject)=>{
-  const req=db.transaction(STORE,'readwrite').objectStore(STORE).delete(id);
-  req.onsuccess=resolve;
-  req.onerror=()=>reject(req.error);
- });
-}
-
-function capturarGPS(){
+const DB='geoAgromobDB', STORE='equipamentos';
+let gps=null, fotos={1:'',2:''}, stream=null, fotoAtual=1, busy=false, enderecoAtual='';
+function abrirDB(){return new Promise((resolve,reject)=>{const req=indexedDB.open(DB,1);req.onupgradeneeded=()=>{if(!req.result.objectStoreNames.contains(STORE))req.result.createObjectStore(STORE,{keyPath:'id',autoIncrement:true});};req.onsuccess=()=>resolve(req.result);req.onerror=()=>reject(req.error);});}
+async function todos(){const db=await abrirDB();return new Promise((resolve,reject)=>{const req=db.transaction(STORE).objectStore(STORE).getAll();req.onsuccess=()=>resolve(req.result);req.onerror=()=>reject(req.error);});}
+async function inserir(item){const db=await abrirDB();return new Promise((resolve,reject)=>{const req=db.transaction(STORE,'readwrite').objectStore(STORE).add(item);req.onsuccess=()=>resolve(req.result);req.onerror=()=>reject(req.error);});}
+async function excluir(id){const db=await abrirDB();return new Promise((resolve,reject)=>{const req=db.transaction(STORE,'readwrite').objectStore(STORE).delete(id);req.onsuccess=resolve;req.onerror=()=>reject(req.error);});}
+async function capturarGPS(){
  const el=document.getElementById('gpsStatus');
- if(!navigator.geolocation){
-  el.textContent='GPS não disponível neste navegador.';
-  return Promise.resolve(null);
- }
+ if(!navigator.geolocation){el.textContent='GPS não disponível neste navegador.';return null;}
  el.textContent='Obtendo localização precisa...';
- return new Promise(resolve=>{
-  navigator.geolocation.getCurrentPosition(p=>{
-   gps={
-    lat:p.coords.latitude,
-    lon:p.coords.longitude,
-    accuracy:Math.round(p.coords.accuracy),
-    timestamp:new Date().toISOString()
-   };
-   el.textContent='GPS capturado: '+gps.lat.toFixed(6)+', '+gps.lon.toFixed(6)+' • Precisão aproximada: '+gps.accuracy+' m';
-   resolve(gps);
-  },e=>{
-   el.textContent='Não foi possível capturar o GPS. Verifique as permissões e tente novamente.';
-   resolve(null);
-  },{enableHighAccuracy:true,timeout:20000,maximumAge:0});
- });
+ return new Promise(resolve=>navigator.geolocation.getCurrentPosition(async p=>{
+  gps={lat:p.coords.latitude,lon:p.coords.longitude,accuracy:Math.round(p.coords.accuracy),timestamp:new Date().toISOString()};
+  enderecoAtual=await buscarEndereco(gps.lat,gps.lon);
+  el.textContent='GPS capturado: '+gps.lat.toFixed(6)+', '+gps.lon.toFixed(6)+' • Precisão aprox.: '+gps.accuracy+' m'+(enderecoAtual?' • '+enderecoAtual:'');
+  resolve(gps);
+ },()=>{el.textContent='Não foi possível capturar o GPS. Verifique as permissões e tente novamente.';resolve(null);},{enableHighAccuracy:true,timeout:20000,maximumAge:0}));
 }
-
-async function abrirCamera(numero){
- if(busy)return;
- fotoAtual=numero;
- document.getElementById('cameraTitle').textContent=
-  numero===1?'Fotografar plaqueta de identificação':'Fotografar equipamento completo';
- document.getElementById('cameraBox').style.display='block';
-
- if(!gps){
-  await capturarGPS();
- }
- if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){
-  document.getElementById('cameraHint').textContent=
-   'Este navegador não disponibiliza a câmera direta. Abra o Geo AGROMOB no Chrome usando HTTPS.';
-  return;
- }
-
+async function buscarEndereco(lat,lon){
+ try{const r=await fetch('https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat='+encodeURIComponent(lat)+'&lon='+encodeURIComponent(lon));if(!r.ok)return '';const j=await r.json();return j.display_name||'';}catch(e){return '';}
+}
+function abrirCamera(numero){if(busy)return;fotoAtual=numero;document.getElementById('cameraTitle').textContent=numero===1?'Fotografar plaqueta de identificação':'Fotografar equipamento completo';document.getElementById('cameraBox').style.display='block';iniciarCamera();}
+async function iniciarCamera(){
+ if(!gps)await capturarGPS();
+ if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){document.getElementById('cameraHint').textContent='Este navegador não disponibiliza a câmera direta. Abra o Geo AGROMOB no Chrome usando HTTPS.';return;}
+ try{stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:'environment'},width:{ideal:1920},height:{ideal:1080}},audio:false});const v=document.getElementById('video');v.srcObject=stream;await v.play();document.getElementById('cameraHint').textContent='Enquadre a foto e toque em CAPTURAR FOTO.';}catch(e){document.getElementById('cameraHint').textContent='Não foi possível abrir a câmera. Autorize a câmera nas permissões do navegador.';}
+}
+function fecharCamera(){if(stream){stream.getTracks().forEach(t=>t.stop());stream=null;}document.getElementById('video').srcObject=null;document.getElementById('cameraBox').style.display='none';}
+function carregarImagem(url){return new Promise((resolve,reject)=>{const img=new Image();img.crossOrigin='anonymous';img.onload=()=>resolve(img);img.onerror=reject;img.src=url;});}
+async function mapaBlob(lat,lon){
+ // Static map from OpenStreetMap tile servers; returns null if unavailable.
+ const z=16,n=2**z,x=(lon+180)/360*n,latRad=lat*Math.PI/180,y=(1-Math.asinh(Math.tan(latRad))/Math.PI)/2*n;
+ const px=x*256,py=y*256,tx=Math.floor(x),ty=Math.floor(y),dx=px-tx*256,dy=py-ty*256;
+ const c=document.createElement('canvas');c.width=300;c.height=220;const ctx=c.getContext('2d');
  try{
-  stream=await navigator.mediaDevices.getUserMedia({
-   video:{facingMode:{ideal:'environment'},width:{ideal:1920},height:{ideal:1080}},
-   audio:false
-  });
-  const video=document.getElementById('video');
-  video.srcObject=stream;
-  await video.play();
-  document.getElementById('cameraHint').textContent=
-   'Enquadre a foto e toque em CAPTURAR FOTO.';
- }catch(e){
-  document.getElementById('cameraHint').textContent=
-   'Não foi possível abrir a câmera. Autorize a câmera nas permissões do navegador e tente novamente.';
- }
+  const urls=[];
+  for(let ox=-1;ox<=1;ox++)for(let oy=-1;oy<=1;oy++)urls.push({x:tx+ox,y:ty+oy,dx:150+(ox*256-dx),dy:110+(oy*256-dy)});
+  await Promise.all(urls.map(async t=>{if(t.y<0||t.y>=n)return;const im=await carregarImagem('https://tile.openstreetmap.org/'+z+'/'+((t.x%n)+n)%n+'/'+t.y+'.png');ctx.drawImage(im,t.dx,t.dy,256,256);}));
+  // Dark border and pin marker
+  ctx.strokeStyle='white';ctx.lineWidth=5;ctx.beginPath();ctx.arc(150,110,10,0,Math.PI*2);ctx.stroke();
+  ctx.fillStyle='#1688f8';ctx.beginPath();ctx.arc(150,110,8,0,Math.PI*2);ctx.fill();
+  ctx.fillStyle='rgba(255,255,255,.9)';ctx.fillRect(6,190,118,23);ctx.fillStyle='#333';ctx.font='12px Arial';ctx.fillText('OpenStreetMap',12,206);
+  return c;
+ }catch(e){return null;}
 }
-
-function fecharCamera(){
- if(stream){
-  stream.getTracks().forEach(t=>t.stop());
-  stream=null;
- }
- document.getElementById('video').srcObject=null;
- document.getElementById('cameraBox').style.display='none';
-}
-
-function carregarImagem(url){
- return new Promise((resolve,reject)=>{
-  const img=new Image();
-  img.onload=()=>resolve(img);
-  img.onerror=reject;
-  img.src=url;
- });
-}
-
 async function tirarFoto(){
- if(busy)return;
- const video=document.getElementById('video');
- if(!video.videoWidth){
-  alert('A câmera ainda está iniciando. Aguarde um instante.');
-  return;
- }
-
- busy=true;
+ if(busy)return;const video=document.getElementById('video');if(!video.videoWidth){alert('A câmera ainda está iniciando. Aguarde.');return;}
+ busy=true;document.getElementById('cameraHint').textContent='Preparando foto, localização e mapa...';
  try{
   if(!gps)await capturarGPS();
-
-  const canvas=document.getElementById('canvas');
-  const ctx=canvas.getContext('2d');
-  canvas.width=video.videoWidth;
-  canvas.height=video.videoHeight;
-  ctx.drawImage(video,0,0,canvas.width,canvas.height);
-
-  const scale=canvas.width/1000;
-  const margin=18*scale;
-  const line=27*scale;
-  const hasGPS=!!gps;
-  const bandHeight=(hasGPS?4:3)*line+margin*1.4;
-
-  ctx.fillStyle='rgba(0,0,0,0.76)';
-  ctx.fillRect(0,canvas.height-bandHeight,canvas.width,bandHeight);
-
-  ctx.fillStyle='#f4c400';
-  ctx.fillRect(0,canvas.height-bandHeight,canvas.width,4*scale);
-
-  ctx.fillStyle='#ffffff';
-  ctx.font='bold '+(19*scale)+'px Arial';
-  ctx.fillText('GEO AGROMOB',margin,canvas.height-bandHeight+line);
-
-  ctx.font=(15*scale)+'px Arial';
-  const data=new Date();
-  ctx.fillText('Data/hora: '+data.toLocaleString('pt-BR'),
-   margin,canvas.height-bandHeight+line*2);
-
+  const c=document.getElementById('canvas'),ctx=c.getContext('2d');c.width=video.videoWidth;c.height=video.videoHeight;ctx.drawImage(video,0,0,c.width,c.height);
+  const scale=c.width/1000, margin=22*scale, line=31*scale;
+  const now=new Date(), date=now.toLocaleDateString('pt-BR'),time=now.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'}),weekday=now.toLocaleDateString('pt-BR',{weekday:'short'});
+  const addr=enderecoAtual||'Endereço indisponível';
+  const maxAddr=Math.floor((c.width*.62)/(14*scale));
+  const addressLines=quebrarTexto(ctx,addr,maxAddr,14*scale).slice(0,2);
+  const lines=4+addressLines.length, bandH=(lines*line)+margin*1.1;
+  ctx.fillStyle='rgba(0,0,0,.62)';ctx.fillRect(0,c.height-bandH,c.width,bandH);
+  ctx.fillStyle='#f4c400';ctx.fillRect(0,c.height-bandH,5*scale,bandH);
+  ctx.fillStyle='white';ctx.font='bold '+(42*scale)+'px Arial';ctx.fillText(time,margin,c.height-bandH+line*1.25);
+  ctx.font=(19*scale)+'px Arial';ctx.fillText(date+'  '+weekday,margin,c.height-bandH+line*2.0);
+  ctx.font=(14*scale)+'px Arial';addressLines.forEach((s,i)=>ctx.fillText(s,margin,c.height-bandH+line*(2.8+i*.72)));
+  ctx.font=(12*scale)+'px Arial';if(gps)ctx.fillText(gps.lat.toFixed(6)+', '+gps.lon.toFixed(6)+' • ±'+gps.accuracy+' m',margin,c.height-8*scale);
   if(gps){
-   ctx.fillText('GPS: '+gps.lat.toFixed(6)+', '+gps.lon.toFixed(6),
-    margin,canvas.height-bandHeight+line*3);
-   ctx.fillText('Precisão GPS: aprox. '+gps.accuracy+' m',
-    margin,canvas.height-bandHeight+line*4);
-  }else{
-   ctx.fillText('GPS não disponível no momento da captura',
-    margin,canvas.height-bandHeight+line*3);
+   const map=await mapaBlob(gps.lat,gps.lon);
+   if(map){const mw=c.width*.24,mh=mw*.73,pad=9*scale,mx=c.width-mw-pad,my=c.height-bandH-mh-pad;ctx.save();ctx.shadowColor='rgba(0,0,0,.5)';ctx.shadowBlur=12*scale;ctx.fillStyle='white';ctx.fillRect(mx-4*scale,my-4*scale,mw+8*scale,mh+8*scale);ctx.restore();ctx.drawImage(map,mx,my,mw,mh);}
   }
-
-  const result=canvas.toDataURL('image/jpeg',0.88);
-  fotos[fotoAtual]=result;
-
-  const preview=document.getElementById('preview'+fotoAtual);
-  preview.src=result;
-  preview.style.display='block';
-
-  document.getElementById('photoStatus').textContent=
-   'Foto '+fotoAtual+' capturada com data, horário e coordenadas GPS quando disponíveis.';
-
+  fotos[fotoAtual]=c.toDataURL('image/jpeg',.9);
+  const preview=document.getElementById('preview'+fotoAtual);preview.src=fotos[fotoAtual];preview.style.display='block';
+  document.getElementById('photoStatus').textContent='Foto '+fotoAtual+' capturada com data, hora, endereço e mapa quando disponíveis.';
   fecharCamera();
- }catch(e){
-  alert('Não foi possível finalizar a fotografia. Tente novamente.');
- }finally{
-  busy=false;
- }
+ }catch(e){alert('Não foi possível finalizar a foto. Verifique a conexão com a internet e tente novamente.');}
+ finally{busy=false;document.getElementById('cameraHint').textContent='Enquadre a foto e toque em CAPTURAR FOTO.';}
 }
-
-function campo(id){
- return document.getElementById(id).value.trim();
-}
-
+function campo(id){return document.getElementById(id).value.trim();}
 async function salvar(){
- const branch=campo('branch');
- const type=campo('type');
- const model=campo('model');
- const serial=campo('serial');
-
- if(!branch||!type||!model||!serial){
-  alert('Preencha filial, tipo, modelo e número de série.');
-  return;
- }
- if(!fotos[1]||!fotos[2]){
-  alert('Fotografe a plaqueta e o equipamento completo.');
-  return;
- }
-
- const btn=document.getElementById('saveBtn');
- btn.disabled=true;
- try{
-  const now=new Date();
-  await inserir({
-   branch,type,model,serial,
-   notes:campo('notes'),
-   photo1:fotos[1],
-   photo2:fotos[2],
-   gps:gps,
-   datetime:now.toISOString(),
-   dateLabel:now.toLocaleString('pt-BR')
-  });
-
-  ['type','model','serial','notes'].forEach(id=>{
-   document.getElementById(id).value='';
-  });
-  fotos={1:'',2:''};
-  [1,2].forEach(n=>{
-   const im=document.getElementById('preview'+n);
-   im.removeAttribute('src');
-   im.style.display='none';
-  });
-  gps=null;
-  document.getElementById('gpsStatus').textContent=
-   'Equipamento salvo. Capture o GPS para o próximo registro.';
-  document.getElementById('photoStatus').textContent=
-   'Pronto para fotografar o próximo equipamento.';
-  await listar();
-  window.scrollTo({top:0,behavior:'smooth'});
-  alert('Equipamento salvo com as fotos no cadastro.');
- }catch(e){
-  alert('Erro ao salvar. Verifique o espaço disponível no aparelho.');
- }finally{
-  btn.disabled=false;
- }
+ const branch=campo('branch'),type=campo('type'),model=campo('model'),serial=campo('serial');
+ if(!branch||!type||!model||!serial){alert('Preencha filial, tipo, modelo e número de série.');return;}
+ if(!fotos[1]||!fotos[2]){alert('Fotografe a plaqueta e o equipamento completo.');return;}
+ const btn=document.getElementById('saveBtn');btn.disabled=true;
+ try{const now=new Date();await inserir({branch,type,model,serial,notes:campo('notes'),photo1:fotos[1],photo2:fotos[2],gps:gps,address:enderecoAtual,datetime:now.toISOString(),dateLabel:now.toLocaleString('pt-BR')});
+ ['type','model','serial','notes'].forEach(id=>document.getElementById(id).value='');fotos={1:'',2:''};[1,2].forEach(n=>{const im=document.getElementById('preview'+n);im.removeAttribute('src');im.style.display='none';});gps=null;enderecoAtual='';document.getElementById('gpsStatus').textContent='Equipamento salvo. Capture o GPS para o próximo registro.';document.getElementById('photoStatus').textContent='Pronto para fotografar o próximo equipamento.';await listar();window.scrollTo({top:0,behavior:'smooth'});alert('Equipamento salvo com as fotos georreferenciadas.');}
+ catch(e){alert('Erro ao salvar. Verifique o espaço disponível no aparelho.');}finally{btn.disabled=false;}
 }
-
-function esc(v){
- return String(v??'').replace(/[&<>"']/g,c=>({
-  '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
- }[c]));
-}
-
+function esc(v){return String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
 async function listar(){
- try{
-  const data=await todos();
-  const q=campo('search').toLowerCase();
-  const list=data.filter(x=>
-   [x.branch,x.type,x.model,x.serial].some(v=>
-    String(v||'').toLowerCase().includes(q)
-   )
-  );
-  document.getElementById('count').textContent=
-   data.length+' equipamento(s) registrado(s)';
-  const el=document.getElementById('records');
-  if(!list.length){
-   el.innerHTML='<p class="hint">Nenhum registro encontrado.</p>';
-   return;
-  }
-  el.innerHTML=list.slice().reverse().map(x=>
-   '<div class="item"><b>'+esc(x.model)+' — '+esc(x.type)+'</b>'+
-   '<div class="hint">Série: '+esc(x.serial)+'<br>'+
-   esc(x.branch)+' • '+esc(x.dateLabel)+'</div>'+
-   '<button data-report="'+x.id+'" class="gray">Ver relatório individual</button>'+
-   '<button data-delete="'+x.id+'" class="gray">Excluir</button></div>'
-  ).join('');
-
-  el.querySelectorAll('[data-delete]').forEach(b=>{
-   b.onclick=async()=>{
-    if(confirm('Excluir este registro?')){
-     await excluir(Number(b.dataset.delete));
-     await listar();
-    }
-   };
-  });
-  el.querySelectorAll('[data-report]').forEach(b=>{
-   b.onclick=()=>gerarPDF(Number(b.dataset.report));
-  });
- }catch(e){
-  document.getElementById('records').textContent='Não foi possível carregar os registros.';
- }
+ try{const data=await todos(),q=campo('search').toLowerCase(),list=data.filter(x=>[x.branch,x.type,x.model,x.serial].some(v=>String(v||'').toLowerCase().includes(q)));
+ document.getElementById('count').textContent=data.length+' equipamento(s) registrado(s)';const el=document.getElementById('records');
+ if(!list.length){el.innerHTML='<p class="hint">Nenhum registro encontrado.</p>';return;}
+ el.innerHTML=list.slice().reverse().map(x=>'<div class="item"><b>'+esc(x.model)+' — '+esc(x.type)+'</b><div class="hint">Série: '+esc(x.serial)+'<br>'+esc(x.branch)+' • '+esc(x.dateLabel)+'</div><button data-report="'+x.id+'" class="gray">Ver relatório individual</button><button data-delete="'+x.id+'" class="gray">Excluir</button></div>').join('');
+ el.querySelectorAll('[data-delete]').forEach(b=>b.onclick=async()=>{if(confirm('Excluir este registro?')){await excluir(Number(b.dataset.delete));await listar();}});
+ el.querySelectorAll('[data-report]').forEach(b=>b.onclick=()=>gerarPDF(Number(b.dataset.report)));
+ }catch(e){document.getElementById('records').textContent='Não foi possível carregar os registros.';}
 }
-
 async function gerarPDF(id){
- const data=await todos();
- const list=id==null?data:data.filter(x=>x.id===id);
- if(!list.length){
-  alert('Nenhum registro para gerar relatório.');
-  return;
- }
-
- const w=window.open('','_blank');
- if(!w){
-  alert('O navegador bloqueou o relatório. Permita janelas pop-up.');
-  return;
- }
-
- const html=`<!doctype html><html lang="pt-BR"><head>
- <meta charset="utf-8"><title>Relatório Geo AGROMOB</title>
- <style>
- body{font-family:Arial,sans-serif;margin:20px;color:#222}
- header{border-bottom:5px solid #f4c400;padding:10px 0;margin-bottom:20px}
- h1{font-size:22px}h2{font-size:18px}
- .equip{page-break-after:always;margin-bottom:24px}
- .pics{display:grid;grid-template-columns:1fr 1fr;gap:12px}
- figure{margin:0;min-width:0}
- img{width:100%;height:300px;object-fit:contain;border:1px solid #ddd}
- figcaption{text-align:center;font-size:12px;padding:5px}
- p{font-size:13px;line-height:1.6}
- button{padding:12px;background:#f4c400;border:0;border-radius:8px;font-weight:bold}
- @media print{button{display:none}body{margin:12mm}}
- </style></head><body>
- <button onclick="window.print()">IMPRIMIR / SALVAR EM PDF</button>
- <header><h1>RELATÓRIO GEO AGROMOB</h1>
- <p>Gerado em ${new Date().toLocaleString('pt-BR')}</p></header>
- ${list.map((x,i)=>`
- <article class="equip">
- <h2>${i+1}. ${esc(x.type)} — ${esc(x.model)}</h2>
- <p><b>Filial:</b> ${esc(x.branch)}<br>
- <b>Número de série:</b> ${esc(x.serial)}<br>
- <b>Data/hora:</b> ${esc(x.dateLabel)}<br>
- <b>Observações:</b> ${esc(x.notes||'—')}<br>
- <b>Coordenadas:</b> ${x.gps?x.gps.lat+', '+x.gps.lon:'Não capturadas'}
- ${x.gps?'<br><a href="https://www.openstreetmap.org/?mlat='+x.gps.lat+'&mlon='+x.gps.lon+'#map=17/'+x.gps.lat+'/'+x.gps.lon+'">Abrir localização no OpenStreetMap</a>':''}
- </p>
- <div class="pics">
- <figure><img src="${x.photo1||''}"><figcaption>Plaqueta de identificação</figcaption></figure>
- <figure><img src="${x.photo2||''}"><figcaption>Equipamento completo</figcaption></figure>
- </div></article>`).join('')}
+ const data=await todos(),list=id==null?data:data.filter(x=>x.id===id);if(!list.length){alert('Nenhum registro para gerar relatório.');return;}
+ const w=window.open('','_blank');if(!w){alert('O navegador bloqueou o relatório. Permita janelas pop-up.');return;}
+ const html=`<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><title>Relatório Geo AGROMOB</title><style>
+ body{font-family:Arial,sans-serif;margin:20px;color:#222}header{border-bottom:5px solid #f4c400;padding:10px 0;margin-bottom:20px}h1{font-size:22px}h2{font-size:18px}.equip{page-break-after:always;margin-bottom:24px}.pics{display:grid;grid-template-columns:1fr 1fr;gap:12px}figure{margin:0;min-width:0}img{width:100%;height:300px;object-fit:contain;border:1px solid #ddd}figcaption{text-align:center;font-size:12px;padding:5px}p{font-size:13px;line-height:1.6}button{padding:12px;background:#f4c400;border:0;border-radius:8px;font-weight:bold}@media print{button{display:none}body{margin:12mm}}
+ </style></head><body><button onclick="window.print()">IMPRIMIR / SALVAR EM PDF</button><header><h1>RELATÓRIO DE GEOLOCALIZAÇÃO</h1><p>AGROMOB • ${list.length} equipamento(s) • Gerado em ${new Date().toLocaleString('pt-BR')}</p></header>
+ ${list.map((x,i)=>`<article class="equip"><h2>${i+1}. ${esc(x.type)} — ${esc(x.model)}</h2><p><b>Nº de série / chassi:</b> ${esc(x.serial)}<br><b>Filial:</b> ${esc(x.branch)}<br><b>Data e hora:</b> ${esc(x.dateLabel)}<br><b>Localização:</b> ${x.gps?x.gps.lat.toFixed(6)+', '+x.gps.lon.toFixed(6)+' (precisão aprox. '+x.gps.accuracy+' m)':'Não capturada'}${x.address?'<br><b>Endereço:</b> '+esc(x.address):''}<br><b>Observações:</b> ${esc(x.notes||'—')}<br>${x.gps?'<a href="https://maps.google.com/?q='+x.gps.lat+','+x.gps.lon+'">Abrir no Google Maps</a> • <a href="https://www.openstreetmap.org/?mlat='+x.gps.lat+'&mlon='+x.gps.lon+'#map=17/'+x.gps.lat+'/'+x.gps.lon+'">OpenStreetMap</a>':''}</p><div class="pics"><figure><img src="${x.photo1||''}"><figcaption>Plaqueta de identificação</figcaption></figure><figure><img src="${x.photo2||''}"><figcaption>Equipamento</figcaption></figure></div></article>`).join('')}
  </body></html>`;
-
- w.document.open();
- w.document.write(html);
- w.document.close();
+ w.document.open();w.document.write(html);w.document.close();
 }
-
-async function exportarBackup(){
- const data=await todos();
- const blob=new Blob([JSON.stringify(data)],{type:'application/json'});
- const url=URL.createObjectURL(blob);
- const a=document.createElement('a');
- a.href=url;
- a.download='backup_geo_agromob_'+new Date().toISOString().slice(0,10)+'.json';
- a.click();
- setTimeout(()=>URL.revokeObjectURL(url),1500);
-}
-
-document.getElementById('backupFile').onchange=async e=>{
- const file=e.target.files[0];
- if(!file)return;
- try{
-  const data=JSON.parse(await file.text());
-  if(!Array.isArray(data))throw Error();
-  if(!confirm('Importar '+data.length+' registros para este aparelho?'))return;
-  for(const x of data){
-   const item={...x};
-   delete item.id;
-   await inserir(item);
-  }
-  await listar();
-  alert('Backup importado.');
- }catch(err){
-  alert('Arquivo inválido ou incompatível.');
- }finally{
-  e.target.value='';
- }
-};
-
-async function limparRegistros(){
- if(!confirm('Confirma apagar permanentemente TODOS os registros deste aparelho?'))return;
- if(!confirm('Última confirmação: deseja realmente apagar todos os equipamentos e fotos?'))return;
- const db=await abrirDB();
- await new Promise((resolve,reject)=>{
-  const req=db.transaction(STORE,'readwrite').objectStore(STORE).clear();
-  req.onsuccess=resolve;
-  req.onerror=()=>reject(req.error);
- });
- await listar();
- alert('Registros apagados.');
-}
-
+async function exportarBackup(){const data=await todos(),blob=new Blob([JSON.stringify(data)],{type:'application/json'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='backup_geo_agromob_'+new Date().toISOString().slice(0,10)+'.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),1500);}
+document.getElementById('backupFile').onchange=async e=>{const file=e.target.files[0];if(!file)return;try{const data=JSON.parse(await file.text());if(!Array.isArray(data))throw Error();if(!confirm('Importar '+data.length+' registros para este aparelho?'))return;for(const x of data){const item={...x};delete item.id;await inserir(item);}await listar();alert('Backup importado.');}catch(err){alert('Arquivo inválido ou incompatível.');}finally{e.target.value='';}};
+async function limparRegistros(){if(!confirm('Confirma apagar permanentemente TODOS os registros deste aparelho?'))return;if(!confirm('Última confirmação: deseja realmente apagar todos os equipamentos e fotos?'))return;const db=await abrirDB();await new Promise((resolve,reject)=>{const req=db.transaction(STORE,'readwrite').objectStore(STORE).clear();req.onsuccess=resolve;req.onerror=()=>reject(req.error);});await listar();alert('Registros apagados.');}
 listar();
+function quebrarTexto(ctx,text,maxChars,fontSize){ctx.font=fontSize+'px Arial';const words=String(text).split(/\s+/),out=[];let line='';for(const word of words){const test=line?line+' '+word:word;if(ctx.measureText(test).width>maxChars*fontSize&&line){out.push(line);line=word;}else line=test;}if(line)out.push(line);return out;}
 </script>
-</body>
-</html>
+</body></html>
