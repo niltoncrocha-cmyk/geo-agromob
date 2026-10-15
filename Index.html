@@ -140,12 +140,19 @@ async function excluir(id){
  });
 }
 
+
 function abrirTimeMark(){
- const loja='https://play.google.com/store/apps/details?id=com.utilityhub.timemark';
- const intent='intent://launch/#Intent;package=com.utilityhub.timemark;action=android.intent.action.MAIN;category=android.intent.category.LAUNCHER;S.browser_fallback_url='+encodeURIComponent(loja)+';end';
- document.getElementById('photoStatus').textContent='Tentando abrir TimeMark. Salve a foto e volte para selecionar na galeria.';
- location.href=intent;
+  const pacote = 'com.oceangalaxy.camera.new';
+  const url = 'intent://launch/#Intent;package=' + pacote +
+    ';action=android.intent.action.MAIN' +
+    ';category=android.intent.category.LAUNCHER;end';
+
+  document.getElementById('photoStatus').textContent =
+    'Abrindo TimeMark. Tire e salve a foto e depois volte para selecioná-la na galeria.';
+
+  window.location.href = url;
 }
+
 
 function capturarGPS(){
  const s=document.getElementById('gpsStatus');
